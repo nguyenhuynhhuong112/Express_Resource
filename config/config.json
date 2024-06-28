@@ -1,0 +1,41 @@
+{
+  "development": {
+    "username": "sa",
+    "password": "0112",
+    "database": "demo_resource",
+    "host": "localhost",
+    "dialect": "mssql",
+    "dialectOptions": {
+      "options": {
+        "encrypt": true,
+        "enableArithAbort": true
+      }
+    }
+  },
+  "test": {
+    "username": "sa",
+    "password": "0112",
+    "database": "demo_resource",
+    "host": "localhost",
+    "dialect": "mssql",
+    "dialectOptions": {
+      "options": {
+        "encrypt": true,
+        "enableArithAbort": true
+      }
+    }
+  },
+  "production": {
+    "username": "sa",
+    "password": "0112",
+    "database": "demo_resource",
+    "host": "localhost",
+    "dialect": "mssql",
+    "dialectOptions": {
+      "options": {
+        "encrypt": true,
+        "enableArithAbort": true
+      }
+    }
+  }
+}
