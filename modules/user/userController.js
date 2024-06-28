@@ -81,10 +81,31 @@ async function deleteUser(req, res) {
   }
 }
 
+async function updateUser(req, res) {
+  const { userId } = req.params;
+  const { userName, email, password, roleIds } = req.body;
+
+  try {
+    const userData = { userName, email, password };
+    const result = await updateUserById(userId, userData, roleIds);
+
+    if (result.error) {
+      const statusCode = result.statusCode || 500;
+      return res.status(statusCode).json({ error: result.error });
+    }
+
+    return res.status(200).json({ message: "User updated successfully", data: result.user });
+  } catch (error) {
+    console.error("Error updating user:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+}
+
 
 module.exports = {
   createUser,
   getUserRoleByUserId,
   getAllUsers,
   deleteUser,
+  updateUser
 };

@@ -61,10 +61,27 @@ async function deleteUserRolesByUserId(userId) {
   }
 }
 
-
+async function updateUserRole(userId, roleId) {
+  try {
+    let userRole = await UserRole.findOne({
+      where: {
+        userId: userId,
+      },
+    });
+    if (userRole) {
+      userRole.roleId = roleId;
+      await userRole.save();
+    } else {
+      throw new Error(`UserRole for userId ${userId} does not exist.`);
+    }
+  } catch (error) {
+    return { error: error.message, statusCode: 404 };
+  }
+}
 
 module.exports = {
   insertUserRole,
   getUserRoleByUserId,
   deleteUserRolesByUserId,
+  updateUserRole
 };

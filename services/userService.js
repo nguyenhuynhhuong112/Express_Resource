@@ -132,10 +132,80 @@ async function deleteUserByUserId(userId) {
   }
 }
 
+async function updateUserById(userId, userData, roleIds) {
+  try {
+    let user = await User.findByPk(userId);
+
+    if (!user) {
+      throw new Error(`User with id ${userId} not found.`);
+    }
+
+    if (
+      userData.userName !== undefined &&
+      userData.userName !== user.userName
+    ) {
+      const existingUser = await User.findOne({
+        where: {
+          userName: userData.userName,
+          id: { [Op.ne]: userId },
+        },
+      });
+      if (existingUser) {
+        throw new Error(`Username '${userData.userName}' is already taken.`);
+      }
+    }
+
+    if (userData.email !== undefined && userData.email !== user.email) {
+      const existingUser = await User.findOne({
+        where: {
+          email: userData.email,
+          id: { [Op.ne]: userId },
+        },
+      });
+      if (existingUser) {
+        throw new Error(`Email '${userData.email}' is already registered.`);
+      }
+    }
+
+    if (userData.userName !== undefined) {
+      user.userName = userData.userName;
+    }
+    if (userData.email !== undefined) {
+      user.email = userData.email;
+    }
+    if (userData.password !== undefined) {
+      user.password = userData.password;
+    }
+
+    await user.save();
+
+    if (roleIds && roleIds.length > 0) {
+      await UserRole.destroy({
+        where: {
+          userId: userId,
+        },
+      });
+
+      for (let roleId of roleIds) {
+        await UserRole.create({
+          userId: userId,
+          roleId: roleId,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+      }
+    }
+
+    return { user };
+  } catch (error) {
+    return { error: error.message, statusCode: 500 };
+  }
+}
 
 module.exports = {
   insertUser,
   getUserByUserId,
   getAllUsersWithRoles,
   deleteUserByUserId,
+  updateUserById,
 };
