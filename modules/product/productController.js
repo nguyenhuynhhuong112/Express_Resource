@@ -1,4 +1,8 @@
-const { insertProduct } = require("../../services/productService");
+const {
+  insertProduct,
+  getProductById,
+  getProductAll
+} = require("../../services/productService");
 
 async function createProduct(req, res) {
   const { name, price, website } = req.body;
@@ -16,6 +20,34 @@ async function createProduct(req, res) {
   }
 }
 
+async function getOneProduct(req, res) {
+  try {
+    const { id } = req.params;
+    const product = await getProductById(id);
+    if (product.error) {
+      const statusCode = product.statusCode || 500;
+      return res.status(statusCode).json({ error: product.error });
+    }
+    return res.status(200).json({ data: product });
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+}
+
+async function findAllProduct(req, res) {
+  try {
+    const product = await getProductAll();
+    if (product.error) {
+      const statusCode = product.statusCode || 500;
+      return res.status(statusCode).json({ error: product.error });
+    }
+    return res.status(200).json({ data: product });
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+}
 module.exports = {
   createProduct,
+  getOneProduct,
+  findAllProduct
 };
