@@ -2,7 +2,8 @@ const {
   insertProduct,
   getProductById,
   getProductAll,
-  deleteProduct
+  deleteProduct,
+  updateProduct
 } = require("../../services/productService");
 
 async function createProduct(req, res) {
@@ -61,9 +62,25 @@ async function removeProduct(req, res) {
     res.status(500).json({ error: "Internal Server Error" });
   }
 }
+
+async function updateProductById(req, res) {
+  try {
+    const { id } = req.params;
+    const { name, price, website } = req.body;
+    const product = await updateProduct(id, { name, price, website });
+    if (product.error) {
+      const statusCode = product.statusCode || 500;
+      return res.status(statusCode).json({ error: product.error });
+    }
+    return res.status(200).json({ message: "Product updated successfully", data: product.user });
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+}
 module.exports = {
   createProduct,
   getOneProduct,
   findAllProduct,
-  removeProduct
+  removeProduct,
+  updateProductById
 };
