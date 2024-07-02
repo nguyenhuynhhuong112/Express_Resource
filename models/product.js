@@ -21,24 +21,14 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         allowNull: false,
       },
-      createdAt: {
+      type: {
+        type: DataTypes.STRING,
         allowNull: false,
-        type: DataTypes.DATE,
-      },
-      updatedAt: {
-        allowNull: false,
-        type: DataTypes.DATE,
       },
     },
     {}
   );
   Product.associate = function (models) {
-    Product.belongsToMany(models.User, {
-      through: models.UserProduct,
-      foreignKey: "productId",
-      otherKey: "userId",
-      as: "products",
-    });
     Product.hasMany(models.UserProduct, {
       foreignKey: "productId",
       as: "userProducts",

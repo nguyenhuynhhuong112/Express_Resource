@@ -7,6 +7,7 @@ const {
   getUserRoleByUserId,
   deleteUserRolesByUserId,
   updateUserRole,
+  getRoleName,
 } = require("./userRoleService");
 async function insertUser(user, roleIds) {
   try {
@@ -28,15 +29,19 @@ async function insertUser(user, roleIds) {
       const userRoles = await Promise.all(
         roleIds.map((roleId) => insertUserRole(newUser.id, roleId))
       );
-      return { newUser, userRoles };
+      return userRoles.map((userRole) => ({
+        ...newUser.toJSON(),
+        name: userRole.name,
+      }));
     } else {
       const userRole = await insertUserRole(newUser.id, roleIds);
-      return { newUser, userRole };
+      return { ...newUser.toJSON(), role: userRole.name };
     }
   } catch (error) {
     return { error: error.message, statusCode: error.statusCode || 500 };
   }
 }
+
 async function getUserByUserId(userId) {
   try {
     const user = await User.findOne({
@@ -54,7 +59,12 @@ async function getUserByUserId(userId) {
 async function getAllUsersWithRoles() {
   try {
     const users = await User.findAll({
-      attributes: ["id", "userName", "email", "createdAt", "updatedAt"],
+      attributes: [
+        "id",
+        "userName",
+        "email",
+        "password",
+      ],
       include: [
         {
           model: UserRole,
@@ -64,7 +74,7 @@ async function getAllUsersWithRoles() {
             {
               model: Role,
               as: "role",
-              attributes: ["id", "name", "createdAt", "updatedAt"],
+              attributes: ["id", "name"],
             },
           ],
         },
@@ -107,6 +117,30 @@ async function getAllUsersWithRoles() {
   }
 }
 
+async function userLogin(email, password) {
+  try {
+    const findUser = await User.findOne({
+      where: {
+        email: email,
+        password: password,
+      },
+    });
+    if (!findUser) {
+      const error = new Error("User not found");
+      error.statusCode = 404;
+      throw error;
+    }
+    const findUserRole = await getRoleName(findUser.id);
+    const userLogin = {
+      ...findUser.toJSON(),
+      role: findUserRole.name,
+    };
+    return userLogin;
+  } catch (error) {
+    return { error: error.message, statusCode: error.statusCode || 500 };
+  }
+}
+
 async function deleteUserByUserId(userId) {
   try {
     const deleteUserRole = await deleteUserRolesByUserId(userId);
@@ -132,39 +166,15 @@ async function deleteUserByUserId(userId) {
   }
 }
 
-async function updateUserById(userId, userData, roleIds) {
+async function updateUserById(userId, userData, roleId) {
   try {
     let user = await User.findByPk(userId);
-
+    let userRoleUpdate;
     if (!user) {
       throw new Error(`User with id ${userId} not found.`);
     }
-
-    if (
-      userData.userName !== undefined &&
-      userData.userName !== user.userName
-    ) {
-      const existingUser = await User.findOne({
-        where: {
-          userName: userData.userName,
-          id: { [Op.ne]: userId },
-        },
-      });
-      if (existingUser) {
-        throw new Error(`Username '${userData.userName}' is already taken.`);
-      }
-    }
-
-    if (userData.email !== undefined && userData.email !== user.email) {
-      const existingUser = await User.findOne({
-        where: {
-          email: userData.email,
-          id: { [Op.ne]: userId },
-        },
-      });
-      if (existingUser) {
-        throw new Error(`Email '${userData.email}' is already registered.`);
-      }
+    if (roleId) {
+      userRoleUpdate = await updateUserRole(userId, roleId);
     }
 
     if (userData.userName !== undefined) {
@@ -176,27 +186,15 @@ async function updateUserById(userId, userData, roleIds) {
     if (userData.password !== undefined) {
       user.password = userData.password;
     }
-
+    const findUserRole = await getRoleName(userId);
     await user.save();
-
-    if (roleIds && roleIds.length > 0) {
-      await UserRole.destroy({
-        where: {
-          userId: userId,
-        },
-      });
-
-      for (let roleId of roleIds) {
-        await UserRole.create({
-          userId: userId,
-          roleId: roleId,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        });
-      }
-    }
-
-    return { user };
+    const userUpdate = {
+      id: user.id,
+      userName: user.userName,
+      email: user.email,
+      role: userRoleUpdate ? userRoleUpdate.name : findUserRole.name,
+    };
+    return userUpdate;
   } catch (error) {
     return { error: error.message, statusCode: 500 };
   }
@@ -208,4 +206,5 @@ module.exports = {
   getAllUsersWithRoles,
   deleteUserByUserId,
   updateUserById,
+  userLogin,
 };

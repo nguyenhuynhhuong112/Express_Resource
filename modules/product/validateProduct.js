@@ -24,7 +24,7 @@ function validateUpdateProduct(req, res, next) {
   if (name && typeof name !== "string") {
     errors.push({ message: "name must be a string." });
   }
-  if (price && (!validator.isNumeric(price) || price < 0)) {
+  if (!price  || price < 0) {
     errors.push({ message: "price is required." });
   }
   if (website && !validator.isURL(website)) {

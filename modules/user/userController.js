@@ -4,6 +4,7 @@ const {
   getAllUsersWithRoles,
   deleteUserByUserId,
   updateUserById,
+  userLogin,
 } = require("../../services/userService");
 
 async function createUser(req, res) {
@@ -24,7 +25,11 @@ async function createUser(req, res) {
 
     return res
       .status(200)
-      .json({ message: "Create User Successfully", data: newUser });
+      .json({
+        message: "Create User Successfully",
+        data: newUser,
+        statusCode: 200,
+      });
   } catch (error) {
     console.error("Error creating user:", error);
     res.status(500).json({ error: "Internal Server Error" });
@@ -83,29 +88,46 @@ async function deleteUser(req, res) {
 
 async function updateUser(req, res) {
   const { userId } = req.params;
-  const { userName, email, password, roleIds } = req.body;
+  const { userName, email, password, roleId } = req.body;
 
   try {
     const userData = { userName, email, password };
-    const result = await updateUserById(userId, userData, roleIds);
+    const result = await updateUserById(userId, userData, roleId);
 
     if (result.error) {
       const statusCode = result.statusCode || 500;
       return res.status(statusCode).json({ error: result.error });
     }
 
-    return res.status(200).json({ message: "User updated successfully", data: result.user });
+    return res
+      .status(200)
+      .json({ message: "User updated successfully", data: result });
   } catch (error) {
     console.error("Error updating user:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 }
 
-
+async function login(req, res) {
+  try {
+    const { email, password } = req.body;
+    const result = await userLogin(email, password);
+    if (result.error) {
+      const statusCode = result.statusCode || 500;
+      return res.status(statusCode).json({ error: result.error });
+    }
+    return res
+      .status(200)
+      .json({ message: "User login successfully", data: result });
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+}
 module.exports = {
   createUser,
   getUserRoleByUserId,
   getAllUsers,
   deleteUser,
-  updateUser
+  updateUser,
+  login
 };

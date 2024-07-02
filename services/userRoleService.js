@@ -6,10 +6,18 @@ async function insertUserRole(userId, roleId) {
     const userRole = await UserRole.create({
       userId: userId,
       roleId: roleId,
-      createdAt: new Date(),
-      updatedAt: new Date(),
     });
-    return userRole;
+
+    const findRole = await Role.findOne({
+      where: {
+        id: roleId,
+      },
+    });
+
+    return {
+      ...userRole.toJSON(),
+      name: findRole ? findRole.name : null,
+    };
   } catch (error) {
     return { error: error.message, statusCode: error.statusCode || 500 };
   }
@@ -18,7 +26,7 @@ async function insertUserRole(userId, roleId) {
 async function getUserRoleByUserId(userId) {
   try {
     const roles = await Role.findAll({
-      attributes: ["id", "name", "createdAt", "updatedAt"],
+      attributes: ["id", "name"],
       include: [
         {
           model: UserRole,
@@ -35,8 +43,33 @@ async function getUserRoleByUserId(userId) {
         },
       ],
     });
-
     return roles;
+  } catch (error) {
+    return { error: error.message, statusCode: error.statusCode || 500 };
+  }
+}
+
+async function getRoleName(userId) {
+  try {
+    const roleName = await Role.findOne({
+      attributes: ["id", "name"],
+      include: [
+        {
+          model: UserRole,
+          as: "userRoles",
+          attributes: [],
+          where: { userId: userId },
+          include: [
+            {
+              model: User,
+              as: "user",
+              attributes: [],
+            },
+          ],
+        },
+      ],
+    });
+    return roleName;
   } catch (error) {
     return { error: error.message, statusCode: error.statusCode || 500 };
   }
@@ -63,16 +96,18 @@ async function deleteUserRolesByUserId(userId) {
 
 async function updateUserRole(userId, roleId) {
   try {
-    let userRole = await UserRole.findOne({
-      where: {
-        userId: userId,
-      },
-    });
-    if (userRole) {
-      userRole.roleId = roleId;
-      await userRole.save();
-    } else {
-      throw new Error(`UserRole for userId ${userId} does not exist.`);
+    const [updatedRows] = await UserRole.update(
+      { roleId: roleId },
+      { where: { userId: userId } }
+    );
+
+    if (updatedRows > 0) {
+      let updatedUserRole = await Role.findOne({
+        where: {
+          id: roleId,
+        },
+      });
+      return updatedUserRole;
     }
   } catch (error) {
     return { error: error.message, statusCode: 404 };
@@ -83,5 +118,6 @@ module.exports = {
   insertUserRole,
   getUserRoleByUserId,
   deleteUserRolesByUserId,
-  updateUserRole
+  updateUserRole,
+  getRoleName,
 };

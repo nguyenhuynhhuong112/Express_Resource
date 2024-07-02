@@ -62,7 +62,7 @@ async function updateProduct(id, product) {
       productExists.website = product.website;
     }
     await productExists.save();
-    return { productExists };
+    return productExists
   } catch (error) {
     return { error: error.message, statusCode: error.statusCode || 500 };
   }
