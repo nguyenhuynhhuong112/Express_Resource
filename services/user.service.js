@@ -121,7 +121,7 @@ async function updateUserService(id, updateData, transaction) {
     });
 
     if (numberOfAffectedRows === 0) {
-      throw new Error('Update failed');
+      throw new Error("Update failed");
     }
 
     return { message: "User updated successfully", statusCode: 200 };
@@ -130,6 +130,20 @@ async function updateUserService(id, updateData, transaction) {
   }
 }
 
+async function userLoginService(email, password) {
+  const transaction = await sequelize.transaction();
+  try {
+    const user = await User.findOne({
+      where: { email, password },
+      transaction,
+    });
+    await transaction.commit();
+    return { result: user, statusCode: 200 };
+  } catch (error) {
+    await transaction.rollback();
+    return { error: error.message, statusCode: error.statusCode || 500 };
+  }
+}
 
 module.exports = {
   createUserService,
@@ -138,4 +152,5 @@ module.exports = {
   getAllUsersService,
   deleteUserService,
   updateUserService,
+  userLoginService,
 };

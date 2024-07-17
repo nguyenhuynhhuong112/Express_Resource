@@ -118,10 +118,32 @@ async function updateUser(req, res) {
   }
 }
 
+async function userLogin(req, res) {
+  const transaction = await sequelize.transaction();
+  const { email, password } = req.body;
+  try {
+    if (!email || !password) {
+      return res
+        .status(400)
+        .json({ error: "Missing required fields", statusCode: 400 });
+    }
+    const user = await service.userLoginService(email, password, transaction);
+    if (!user.result) {
+      return res.status(404).json({ error: "Try again", statusCode: 404 });
+    }
+    await transaction.commit();
+    return res.status(user.statusCode).send(user);
+  } catch (error) {
+    await transaction.rollback();
+    return res.status(error.statusCode || 500).json({ error: error.message });
+  }
+}
+
 module.exports = {
   createUser,
   getOneUser,
   getAllUser,
   deleteUser,
   updateUser,
+  userLogin,
 };

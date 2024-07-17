@@ -6,6 +6,7 @@ const validate = require("./user.validate");
 
 // post
 router.post("/create-user", validate.validateUser, controller.createUser);
+router.post("/login", controller.userLogin);
 
 // get
 router.get("/get-one-user/:id", controller.getOneUser);
