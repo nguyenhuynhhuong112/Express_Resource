@@ -1,8 +1,8 @@
-const { Product } = require("../models");
-
-async function insertProduct(product) {
+const db = require("../models");
+const product = db.Product;
+async function insertProduct(productCreate) {
   try {
-    const newProduct = await Product.create(product);
+    const newProduct = await product.create(productCreate);
     return newProduct;
   } catch (error) {
     return { error: error.message, statusCode: error.statusCode || 500 };
@@ -11,8 +11,8 @@ async function insertProduct(product) {
 
 async function getProductById(id) {
   try {
-    const product = await Product.findByPk(id);
-    return product;
+    const productOne = await product.findByPk(id);
+    return productOne ? { productOne, statusCode: 200 } : { statusCode: 404 };
   } catch (error) {
     return { error: error.message, statusCode: error.statusCode || 500 };
   }
@@ -20,8 +20,8 @@ async function getProductById(id) {
 
 async function getProductAll() {
   try {
-    const product = await Product.findAll();
-    return product;
+    const productFindAll = await product.findAll();
+    return productFindAll;
   } catch (error) {
     return { error: error.message, statusCode: error.statusCode || 500 };
   }
@@ -29,17 +29,14 @@ async function getProductAll() {
 
 async function deleteProduct(id) {
   try {
-    const product = await Product.destroy({
+    console.log("id: ", id);
+    const productDelete = await product.destroy({
       where: {
-        id: id,
+        productId: id,
       },
     });
-    if (product > 0) {
+    if (productDelete > 0) {
       return { message: "Product deleted successfully", statusCode: 204 };
-    } else {
-      const error = new Error("Product not found");
-      error.statusCode = 404;
-      throw error;
     }
   } catch (error) {
     return { error: error.message, statusCode: error.statusCode || 500 };
@@ -62,7 +59,7 @@ async function updateProduct(id, product) {
       productExists.website = product.website;
     }
     await productExists.save();
-    return productExists
+    return productExists;
   } catch (error) {
     return { error: error.message, statusCode: error.statusCode || 500 };
   }

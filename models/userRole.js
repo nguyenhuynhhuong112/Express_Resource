@@ -1,39 +1,50 @@
-'use strict';
+"use strict";
+const { Model } = require("sequelize");
 
 module.exports = (sequelize, DataTypes) => {
-  const UserRole = sequelize.define('UserRole', {
-    userId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'Users',
-        key: 'id'
+  class UserRole extends Model {
+    static associate(models) {
+      UserRole.belongsTo(models.User, {
+        foreignKey: "userId",
+        sourceKey: "userId",
+      });
+      UserRole.belongsTo(models.Role, {
+        foreignKey: "roleId",
+        sourceKey: "roleId",
+      });
+    }
+  }
+  UserRole.init(
+    {
+      userId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        primaryKey: true,
+        references: {
+          model: "User",
+          key: "userId",
+        },
+        onUpdate: "CASCADE",
+        onDelete: "CASCADE",
       },
-      onUpdate: 'CASCADE',
-      onDelete: 'CASCADE'
-    },
-    roleId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'Roles',
-        key: 'id'
+      roleId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        primaryKey: true,
+        references: {
+          model: "Role",
+          key: "roleId",
+        },
+        onUpdate: "CASCADE",
+        onDelete: "CASCADE",
       },
-      onUpdate: 'CASCADE',
-      onDelete: 'CASCADE'
     },
-  }, {});
-
-  UserRole.associate = function(models) {
-    UserRole.belongsTo(models.User, {
-      foreignKey: 'userId',
-      as: 'user'
-    });
-    UserRole.belongsTo(models.Role, {
-      foreignKey: 'roleId',
-      as: 'role'
-    });
-  };
+    {
+      sequelize,
+      tableName: "UserRole",
+      timestamps: false,
+    }
+  );
 
   return UserRole;
 };

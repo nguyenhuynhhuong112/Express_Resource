@@ -2,7 +2,7 @@
   "development": {
     "username": "sa",
     "password": "0112",
-    "database": "vue_test",
+    "database": "test_v1",
     "host": "localhost",
     "dialect": "mssql",
     "dialectOptions": {
@@ -15,7 +15,7 @@
   "test": {
     "username": "sa",
     "password": "0112",
-    "database": "vue_test",
+    "database": "demo",
     "host": "localhost",
     "dialect": "mssql",
     "dialectOptions": {
@@ -28,7 +28,7 @@
   "production": {
     "username": "sa",
     "password": "0112",
-    "database": "vue_test",
+    "database": "demo",
     "host": "localhost",
     "dialect": "mssql",
     "dialectOptions": {

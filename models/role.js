@@ -1,32 +1,35 @@
-'use strict';
+"use strict";
+const { Model } = require("sequelize");
 
 module.exports = (sequelize, DataTypes) => {
-  const Role = sequelize.define('Role', {
-    id: {
-      type: DataTypes.INTEGER,
-      primaryKey: true,
-      autoIncrement: true,
-      allowNull: false
+  class Role extends Model {
+    static associate(models) {
+      Role.hasMany(models.UserRole, {
+        foreignKey: "roleId",
+        sourceKey: "roleId",
+      });
+    }
+  }
+  Role.init(
+    {
+      roleId: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+        allowNull: false,
+      },
+      roleName: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        unique: true,
+      },
     },
-    name: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      unique: true
-    },
-  }, {});
-
-  Role.associate = function(models) {
-    Role.belongsToMany(models.User, {
-      through: models.UserRole,
-      foreignKey: 'roleId',
-      otherKey: 'userId',
-      as: 'users'
-    });
-    Role.hasMany(models.UserRole, {
-      foreignKey: 'roleId',
-      as: 'userRoles'
-    });
-  };
+    {
+      sequelize,
+      tableName: "Role",
+      timestamps: false,
+    }
+  );
 
   return Role;
 };

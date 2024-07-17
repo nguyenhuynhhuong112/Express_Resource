@@ -1,49 +1,30 @@
-const { UserRole } = require("../models");
-const { Role } = require("../models");
-const { User } = require("../models");
-async function insertUserRole(userId, roleId) {
+const db = require("../models");
+const UserRole = db.UserRole;
+const Role = db.Role;
+
+async function insertUserRole(userId, roleId, transaction = null) {
   try {
-    const userRole = await UserRole.create({
-      userId: userId,
-      roleId: roleId,
-    });
+    const userRole = await UserRole.create(
+      { userId, roleId },
+      { transaction }
+    );
 
-    const findRole = await Role.findOne({
-      where: {
-        id: roleId,
-      },
-    });
-
-    return {
-      ...userRole.toJSON(),
-      name: findRole ? findRole.name : null,
-    };
+    const role = await Role.findByPk(roleId, { transaction });
+    return { ...userRole.toJSON(), name: role.name };
   } catch (error) {
     return { error: error.message, statusCode: error.statusCode || 500 };
   }
 }
 
+
 async function getUserRoleByUserId(userId) {
   try {
-    const roles = await Role.findAll({
-      attributes: ["id", "name"],
-      include: [
-        {
-          model: UserRole,
-          as: "userRoles",
-          attributes: [],
-          where: { userId: userId },
-          include: [
-            {
-              model: User,
-              as: "user",
-              attributes: [],
-            },
-          ],
-        },
-      ],
+    const userRole = await UserRole.findOne({
+      where: {
+        userId: userId,
+      },
     });
-    return roles;
+    return userRole;
   } catch (error) {
     return { error: error.message, statusCode: error.statusCode || 500 };
   }
@@ -51,25 +32,13 @@ async function getUserRoleByUserId(userId) {
 
 async function getRoleName(userId) {
   try {
-    const roleName = await Role.findOne({
-      attributes: ["id", "name"],
-      include: [
-        {
-          model: UserRole,
-          as: "userRoles",
-          attributes: [],
-          where: { userId: userId },
-          include: [
-            {
-              model: User,
-              as: "user",
-              attributes: [],
-            },
-          ],
-        },
-      ],
+    const userRole = await UserRole.findOne({
+      where: {
+        userId: userId,
+      },
     });
-    return roleName;
+    const role = await Role.findByPk(userRole.roleId);
+    return role.name;
   } catch (error) {
     return { error: error.message, statusCode: error.statusCode || 500 };
   }
@@ -82,13 +51,7 @@ async function deleteUserRolesByUserId(userId) {
         userId: userId,
       },
     });
-    if (userRoles > 0) {
-      return { message: "User roles deleted successfully", statusCode: 204 };
-    } else {
-      const error = new Error("UserRoles not found");
-      error.statusCode = 404;
-      throw error;
-    }
+    return { message: "Roles deleted successfully" };
   } catch (error) {
     return { error: error.message, statusCode: error.statusCode || 500 };
   }
@@ -96,28 +59,26 @@ async function deleteUserRolesByUserId(userId) {
 
 async function updateUserRole(userId, roleId) {
   try {
-    const [updatedRows] = await UserRole.update(
+    await UserRole.update(
       { roleId: roleId },
-      { where: { userId: userId } }
+      {
+        where: {
+          userId: userId,
+        },
+      }
     );
 
-    if (updatedRows > 0) {
-      let updatedUserRole = await Role.findOne({
-        where: {
-          id: roleId,
-        },
-      });
-      return updatedUserRole;
-    }
+    const updatedRole = await Role.findByPk(roleId);
+    return { message: "User role updated successfully", name: updatedRole.name };
   } catch (error) {
-    return { error: error.message, statusCode: 404 };
+    return { error: error.message, statusCode: error.statusCode || 500 };
   }
 }
 
 module.exports = {
   insertUserRole,
   getUserRoleByUserId,
+  getRoleName,
   deleteUserRolesByUserId,
   updateUserRole,
-  getRoleName,
 };

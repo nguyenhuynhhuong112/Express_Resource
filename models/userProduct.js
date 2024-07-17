@@ -1,15 +1,27 @@
 "use strict";
+const { Model } = require("sequelize");
 
 module.exports = (sequelize, DataTypes) => {
-  const UserProduct = sequelize.define(
-    "UserProduct",
+  class UserProduct extends Model {
+    static associate(models) {
+      UserProduct.belongsTo(models.Product, {
+        foreignKey: "productId",
+        sourceKey: "productId",
+      });
+      UserProduct.belongsTo(models.User, {
+        foreignKey: "userId",
+        sourceKey: "userId",
+      });
+    }
+  }
+  UserProduct.init(
     {
       userId: {
         type: DataTypes.INTEGER,
         allowNull: false,
         references: {
-          model: "Users",
-          key: "id",
+          model: "User",
+          key: "userId",
         },
         onUpdate: "CASCADE",
         onDelete: "CASCADE",
@@ -18,26 +30,19 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.INTEGER,
         allowNull: false,
         references: {
-          model: "Products",
-          key: "id",
+          model: "Product",
+          key: "productId",
         },
         onUpdate: "CASCADE",
         onDelete: "CASCADE",
       },
     },
-    {}
+    {
+      sequelize,
+      tableName: "UserProduct",
+      timestamps: false,
+    }
   );
-
-  UserProduct.associate = function (models) {
-    UserProduct.belongsTo(models.Product, {
-      foreignKey: "productId",
-      as: "product",
-    });
-    UserProduct.belongsTo(models.User, {
-      foreignKey: "userId",
-      as: "user",
-    });
-  };
 
   return UserProduct;
 };
