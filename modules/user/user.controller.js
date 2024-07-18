@@ -130,9 +130,14 @@ async function userLogin(req, res) {
     const user = await service.userLoginService(email, password, transaction);
     if (!user.result) {
       return res.status(404).json({ error: "Try again", statusCode: 404 });
+    } else {
+      const userInfo = await service.getUserByIdService(
+        user.result.userId,
+        transaction
+      );
+      await transaction.commit();
+      return res.status(userInfo.statusCode).send(userInfo);
     }
-    await transaction.commit();
-    return res.status(user.statusCode).send(user);
   } catch (error) {
     await transaction.rollback();
     return res.status(error.statusCode || 500).json({ error: error.message });

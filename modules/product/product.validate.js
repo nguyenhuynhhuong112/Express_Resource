@@ -1,11 +1,11 @@
 const { body, validationResult } = require("express-validator");
 
 const validateProduct = [
-  body("name")
+  body("productName")
     .notEmpty()
-    .withMessage("name is required.")
+    .withMessage("productName is required.")
     .isString()
-    .withMessage("name must be a string."),
+    .withMessage("productName must be a string."),
   body("price")
     .notEmpty()
     .withMessage("price is required.")

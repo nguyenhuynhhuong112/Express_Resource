@@ -115,7 +115,7 @@ async function updateProduct(req, res) {
           throw new Error(updateResult.error);
         }
         await transaction.commit();
-        return res.status(200).json({ message: "Product updated successfully" });
+        return res.status(200).json({ message: "Product updated successfully", statusCode: 200 });
       } else {
         await transaction.rollback();
         return res
