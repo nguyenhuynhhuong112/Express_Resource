@@ -21,8 +21,18 @@ async function createUser(req, res) {
         .json({ error: "User already exists", statusCode: 400 });
     }
     const createUser = await service.createUserService(req.body, transaction);
-    await transaction.commit();
-    return res.status(createUser.statusCode).send(createUser);
+
+    if (createUser.statusCode === 201) {
+      const user = await service.getUserByIdService(
+        createUser.result.createUser.userId,
+        transaction
+      );
+      await transaction.commit();
+      return res.status(user.statusCode).send(user);
+    } else {
+      await transaction.rollback();
+      return res.status(createUser.statusCode).json({ error: createUser });
+    }
   } catch (error) {
     await transaction.rollback();
     return res.status(error.statusCode || 500).json({ error: error.message });
@@ -97,6 +107,13 @@ async function updateUser(req, res) {
       updateData.password = req.body.password;
     }
 
+    if (
+      req.body.roleId &&
+      req.body.roleId !== userExists.result.UserRoles.roleId
+    ) {
+      updateData.roleId = req.body.roleId;
+    }
+
     if (Object.keys(updateData).length > 0) {
       const updateResult = await service.updateUserService(
         id,
@@ -106,11 +123,18 @@ async function updateUser(req, res) {
       if (updateResult.error) {
         throw new Error(updateResult.error);
       }
+
       await transaction.commit();
-      return res.status(200).json({ message: "User updated successfully" });
+      return res.status(200).json({
+        message: "User updated successfully",
+
+        statusCode: 200,
+      });
     } else {
       await transaction.rollback();
-      return res.status(400).json({ error: "Missing required fields" });
+      return res
+        .status(400)
+        .json({ error: "Missing required fields", statusCode: 400 });
     }
   } catch (error) {
     await transaction.rollback();

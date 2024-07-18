@@ -115,10 +115,17 @@ async function deleteUserService(id) {
 
 async function updateUserService(id, updateData, transaction) {
   try {
-    const [numberOfAffectedRows] = await User.update(updateData, {
+    let [numberOfAffectedRows] = await User.update(updateData, {
       where: { userId: id },
       transaction,
     });
+
+    if (updateData.roleId) {
+      [numberOfAffectedRows] = await UserRole.update(
+        { roleId: updateData.roleId },
+        { where: { userId: id }, transaction }
+      );
+    }
 
     if (numberOfAffectedRows === 0) {
       throw new Error("Update failed");
